@@ -5,13 +5,19 @@ const resendApiKey = process.env.RESEND_API_KEY
 const fromAddress = process.env.RESEND_FROM || "Contact Form <onboarding@resend.dev>"
 const toAddress = process.env.RESEND_TO || "beimnetdemisew@gmail.com"
 
-const resend = new Resend(resendApiKey)
+// Do NOT instantiate Resend at module evaluation time. Instantiating it
+// without an API key will throw during build on platforms like Vercel.
+// We'll create the client inside the request handler after checking the
+// presence of the API key.
 
 export async function POST(request: NextRequest) {
     try {
         if (!resendApiKey) {
             return NextResponse.json({ error: "Email service not configured" }, { status: 500 })
         }
+    // Instantiate the Resend client here so that builds won't fail
+    // when the API key isn't present in the environment.
+    const resend = new Resend(resendApiKey)
         const { name, email, message } = await request.json()
 
         // console.log("email: ", email, "  name: ", name, "   message: ", message)
